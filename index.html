@@ -259,7 +259,7 @@
         function renderCategoryGrid(category, items, containerId) {
             const container = document.getElementById(containerId);
             if (!items || items.length === 0) {
-                container.innerHTML = `<p class="text-xs text-amber-600 italic col-span-full">No images found in this folder.</p>`;
+                container.innerHTML = '<p class="text-xs text-amber-600 italic col-span-full">No images found in this folder.</p>';
                 return;
             }
             container.innerHTML = items.map(item => `
@@ -280,7 +280,7 @@
                 list.splice(index, 1);
             } else {
                 if (list.length >= 2) {
-                    alert(`You can only select 2 entries in ${category.toUpperCase()}.`);
+                    alert('You can only select 2 entries in ' + category.toUpperCase() + '.');
                     return;
                 }
                 list.push(id);
@@ -291,7 +291,7 @@
         function updateUI() {
             ['open', 'challenge'].forEach(cat => {
                 entries[cat].forEach(item => {
-                    const card = document.getElementById(`card-${item.id}`);
+                    const card = document.getElementById('card-' + item.id);
                     if (card) {
                         if (selections[cat].includes(item.id)) card.classList.add('selected');
                         else card.classList.remove('selected');
@@ -403,7 +403,7 @@
 
             container.innerHTML = rankedList.map(item => {
                 let badgeColor = 'bg-slate-100 text-slate-800';
-                let label = `Rank ${item.rank}`;
+                let label = 'Rank ' + item.rank;
 
                 if (item.rank === 1) {
                     badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
@@ -469,15 +469,12 @@
 
         // FULLSCREEN PROJECTOR DISPLAY LOGIC
         function launchProjectionMode() {
-            // Section 1: Audience
             renderProjectorCards('open', getTopRankedItems('open', entries.open), 'projOpenAudience', 'audience');
             renderProjectorCards('challenge', getTopRankedItems('challenge', entries.challenge), 'projChallengeAudience', 'audience');
 
-            // Section 2: Commendations
             renderCommendationCards(entries.open, appraiserAwards.openCommendations, 'projOpenCommendations');
             renderCommendationCards(entries.challenge, appraiserAwards.challengeCommendations, 'projChallengeCommendations');
 
-            // Section 3: Trophies (Denis Thorpe & Catherine Cup)
             renderTrophyCards();
 
             document.getElementById('projectorOverlay').classList.remove('hidden');
@@ -490,7 +487,7 @@
         function renderProjectorCards(category, rankedList, containerId, mode) {
             const container = document.getElementById(containerId);
             if (!rankedList || rankedList.length === 0) {
-                container.innerHTML = `<p class="text-slate-500 italic text-sm">No entries to display.</p>`;
+                container.innerHTML = '<p class="text-slate-500 italic text-sm">No entries to display.</p>';
                 return;
             }
 
@@ -499,7 +496,7 @@
 
             container.innerHTML = rankedList.map(item => {
                 let badgeClass = 'bg-slate-800 text-slate-200 border-slate-700';
-                let titleLabel = `Rank ${item.rank}`;
+                let titleLabel = 'Rank ' + item.rank;
 
                 if (item.rank === 1) {
                     badgeClass = 'bg-amber-400 text-slate-950 font-black border-amber-300 shadow-lg shadow-amber-500/20';
@@ -539,7 +536,7 @@
             const commItems = categoryEntries.filter(item => commIds.includes(item.id));
 
             if (commItems.length === 0) {
-                container.innerHTML = `<p class="text-slate-500 italic text-sm">No commendations awarded in this category.</p>`;
+                container.innerHTML = '<p class="text-slate-500 italic text-sm">No commendations awarded in this category.</p>';
                 return;
             }
 
@@ -591,7 +588,7 @@
                     </div>
                 `;
             } else {
-                html += `<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center justify-center text-slate-500 italic">Denis Thorpe Trophy winner not yet selected.</div>`;
+                html += '<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center justify-center text-slate-500 italic">Denis Thorpe Trophy winner not yet selected.</div>';
             }
 
             if (catherineCupItem) {
@@ -612,7 +609,7 @@
                     </div>
                 `;
             } else {
-                html += `<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center justify-center text-slate-500 italic">Catherine Cup winner not yet selected.</div>`;
+                html += '<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center justify-center text-slate-500 italic">Catherine Cup winner not yet selected.</div>';
             }
 
             container.innerHTML = html;
