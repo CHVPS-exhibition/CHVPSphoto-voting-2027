@@ -4,26 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photo Club Live Audience Voting</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QRCode.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         .photo-card.selected {
-            border-color: #2563eb;
+            border-color: #2563eb !important;
             background-color: #eff6ff;
         }
         .photo-card.selected .check-badge {
-            display: flex;
+            display: flex !important;
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen pb-12">
+<body class="bg-slate-100 min-h-screen text-slate-800 font-sans pb-12">
 
     <!-- Header -->
-    <header class="bg-slate-900 text-white py-6 shadow-md">
-        <div class="max-w-4xl mx-auto px-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold">📸 Photo Club Competition</h1>
-                <p class="text-sm text-slate-400">Audience Voting System</p>
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">📸</span>
+                <div>
+                    <h1 class="text-lg font-bold leading-tight">Photo Club Competition</h1>
+                    <p class="text-xs text-slate-400">Audience Voting System</p>
+                </div>
             </div>
             <div id="statusBadge" class="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                 Voting Open
@@ -31,102 +36,99 @@
         </div>
     </header>
 
-    <main class="max-w-4xl mx-auto px-4 mt-6">
+    <main class="max-w-4xl mx-auto px-4 mt-6 space-y-6">
 
-        <!-- Host Control Bar -->
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-4 justify-between items-center">
-            <div class="flex items-center gap-2">
-                <span class="text-xs font-semibold uppercase text-slate-500">Host Controls:</span>
-                <button id="closeVotingBtn" onclick="toggleVotingState()" class="bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
+        <!-- Host Controls Bar -->
+        <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs font-semibold">
+            <span class="text-slate-500 uppercase tracking-wider text-[10px]">Host Controls:</span>
+            <div class="flex gap-2">
+                <button id="closeVotingBtn" onclick="toggleVotingState()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition flex items-center gap-1 shadow-sm">
                     🔒 Close Voting & Collate Results
                 </button>
+                <button onclick="toggleQrModal()" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-lg transition flex items-center gap-1 shadow-sm">
+                    📱 Show Voting QR Code
+                </button>
             </div>
-            <button onclick="toggleQrModal()" class="bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2">
-                📱 Show Voting QR Code
-            </button>
         </div>
 
-        <!-- Voting Closed Notice -->
-        <div id="closedNotice" class="hidden bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
-            <p class="font-bold text-amber-800">Voting is currently closed.</p>
-            <p class="text-sm text-amber-700">Thank you for participating! Results are displayed below.</p>
+        <!-- Closed Voting Notice -->
+        <div id="closedNotice" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl text-center text-sm font-medium shadow-sm">
+            Voting is currently closed. Final results are displayed below.
         </div>
 
-        <!-- RESULTS SECTION -->
-        <section id="resultsSection" class="hidden mb-10">
-            <h2 class="text-2xl font-bold mb-4 text-slate-900 flex items-center gap-2">
-                🏆 Official Competition Results
-            </h2>
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- Open Category Results -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-xl font-bold text-blue-600 mb-4 border-b pb-2">Open Category</h3>
-                    <div id="openResultsList" class="space-y-3"></div>
-                </div>
-                <!-- Challenge Category Results -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-xl font-bold text-emerald-600 mb-4 border-b pb-2">Challenge Category</h3>
-                    <div id="challengeResultsList" class="space-y-3"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- VOTING FORM SECTION -->
-        <form id="votingForm" onsubmit="handleVoteSubmit(event)" class="space-y-8">
+        <!-- Form containing Category Cards -->
+        <form id="votingForm" onsubmit="handleVoteSubmit(event)">
 
             <!-- Category 1: Open -->
-            <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex justify-between items-baseline mb-4 border-b pb-3">
-                    <h2 class="text-xl font-bold text-slate-900">Category 1: Open</h2>
-                    <span class="text-xs font-semibold text-slate-500">
-                        Selected: <span id="openCount" class="text-blue-600 font-bold">0</span> / 2
-                    </span>
+            <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-6">
+                <div class="flex justify-between items-center mb-1">
+                    <h2 class="text-base font-bold text-slate-900">Category 1: Open</h2>
+                    <span class="text-xs text-slate-500 font-medium">Selected: <b id="openCount" class="text-blue-600">0</b> / 2</span>
                 </div>
-                <p class="text-sm text-slate-600 mb-4">Please select your top <strong>2 favorite entries</strong> from the Open category below.</p>
+                <p class="text-xs text-slate-500 mb-4">Please select your top <b>2 favorite entries</b> from the Open category below.</p>
                 
-                <div id="openGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    <p class="text-xs text-slate-400 italic">Loading entries from Google Drive...</p>
+                <div id="openGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <p class="text-xs text-slate-400 italic col-span-full">Loading entries from Google Drive...</p>
                 </div>
             </section>
 
             <!-- Category 2: Challenge -->
-            <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex justify-between items-baseline mb-4 border-b pb-3">
-                    <h2 class="text-xl font-bold text-slate-900">Category 2: Challenge</h2>
-                    <span class="text-xs font-semibold text-slate-500">
-                        Selected: <span id="challengeCount" class="text-emerald-600 font-bold">0</span> / 2
-                    </span>
+            <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-6">
+                <div class="flex justify-between items-center mb-1">
+                    <h2 class="text-base font-bold text-slate-900">Category 2: Challenge</h2>
+                    <span class="text-xs text-slate-500 font-medium">Selected: <b id="challengeCount" class="text-blue-600">0</b> / 2</span>
                 </div>
-                <p class="text-sm text-slate-600 mb-4">Please select your top <strong>2 favorite entries</strong> from the Challenge category below.</p>
+                <p class="text-xs text-slate-500 mb-4">Please select your top <b>2 favorite entries</b> from the Challenge category below.</p>
                 
-                <div id="challengeGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    <p class="text-xs text-slate-400 italic">Loading entries from Google Drive...</p>
+                <div id="challengeGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <p class="text-xs text-slate-400 italic col-span-full">Loading entries from Google Drive...</p>
                 </div>
             </section>
 
             <!-- Submit Button -->
-            <div class="text-center pt-4">
-                <button type="submit" id="submitBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-8 py-3 rounded-xl shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+            <div class="text-center sticky bottom-4 z-30">
+                <button id="submitBtn" type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
                     Submit My Votes (4 Total)
                 </button>
             </div>
         </form>
 
+        <!-- Collated Results Section -->
+        <section id="resultsSection" class="hidden space-y-6">
+            <div class="bg-slate-900 text-white p-4 rounded-xl shadow-sm text-center">
+                <h2 class="text-lg font-bold">🏆 Official Competition Results 🏆</h2>
+                <p class="text-xs text-slate-400">Aggregated real-time tallies from Google Sheet backend</p>
+            </div>
+
+            <!-- Open Results -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h3 class="font-bold text-slate-900 border-b pb-2 mb-3 text-sm">Open Category Winners</h3>
+                <div id="openResultsList" class="space-y-2"></div>
+            </div>
+
+            <!-- Challenge Results -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h3 class="font-bold text-slate-900 border-b pb-2 mb-3 text-sm">Challenge Category Winners</h3>
+                <div id="challengeResultsList" class="space-y-2"></div>
+            </div>
+        </section>
+
     </main>
 
     <!-- QR Code Modal -->
-    <div id="qrModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-2xl relative">
-            <button onclick="toggleQrModal()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-lg">✕</button>
-            <h3 class="text-lg font-bold mb-2">Scan to Vote</h3>
-            <p class="text-xs text-slate-500 mb-4">Point smartphone cameras at this screen to open the ballot.</p>
-            <div id="qrcode" class="flex justify-center mb-4"></div>
-            <button onclick="toggleQrModal()" class="bg-slate-100 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm w-full">Close</button>
+    <div id="qrModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl relative">
+            <button onclick="toggleQrModal()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            <h3 class="font-bold text-slate-900 text-lg mb-1">Scan to Vote</h3>
+            <p class="text-xs text-slate-500 mb-4">Point phone camera at code to open voting app</p>
+            <div id="qrcode" class="flex justify-center p-3 bg-slate-50 rounded-xl border mb-4"></div>
+            <button onclick="toggleQrModal()" class="w-full bg-slate-800 text-white font-semibold text-xs py-2.5 rounded-lg">Close</button>
         </div>
     </div>
 
+    <!-- Application JavaScript Logic -->
     <script>
-        // PASTE YOUR APPS SCRIPT WEB APP URL BELOW:
+        // SINGLE GLOBAL CONFIGURATION FOR GOOGLE APPS SCRIPT WEB APP URL:
         const API_URL = 'https://script.google.com/macros/s/AKfycbxdFf1xs1PKNGZYMAVU4HPFdRbuLtBlOBwAgg9CGl-qQAs9Se4PNwH0KSkCJHfmAQ9SaQ/exec';
 
         let entries = { open: [], challenge: [] };
@@ -134,18 +136,18 @@
         let selections = { open: [], challenge: [] };
         let isVotingOpen = true;
 
+        // Fetch live entries and preliminary tallies on load
         async function loadCompetitionEntries() {
             try {
                 const response = await fetch(API_URL);
-                entries = await response.json();
-                
-                entries.open.forEach(e => voteTally.open[e.id] = 0);
-                entries.challenge.forEach(e => voteTally.challenge[e.id] = 0);
+                const data = await response.json();
+                entries.open = data.open || [];
+                entries.challenge = data.challenge || [];
+                if (data.tally) voteTally = data.tally;
                 
                 renderGrids();
             } catch (error) {
                 console.error('Error loading entries:', error);
-                alert('Could not load competition images from Google Drive.');
             }
         }
 
@@ -156,8 +158,8 @@
 
         function renderCategoryGrid(category, items, containerId) {
             const container = document.getElementById(containerId);
-            if (items.length === 0) {
-                container.innerHTML = `<p class="text-xs text-amber-600 italic">No images found in ${category} folder.</p>`;
+            if (!items || items.length === 0) {
+                container.innerHTML = `<p class="text-xs text-amber-600 italic col-span-full">No images found in this folder.</p>`;
                 return;
             }
             container.innerHTML = items.map(item => `
@@ -165,29 +167,24 @@
                      class="photo-card relative bg-white border-2 border-slate-200 rounded-lg overflow-hidden cursor-pointer hover:border-slate-400 transition shadow-sm">
                     <img src="${item.img}" alt="${item.title}" class="w-full h-28 object-cover">
                     <div class="p-2 text-xs font-semibold text-slate-700 truncate">${item.title}</div>
-                    <div class="check-badge absolute top-2 right-2 bg-blue-600 text-white rounded-full w-6 h-6 hidden items-center justify-center text-xs font-bold shadow">
-                        ✓
-                    </div>
+                    <div class="check-badge absolute top-2 right-2 bg-blue-600 text-white rounded-full w-6 h-6 hidden items-center justify-center text-xs font-bold shadow">✓</div>
                 </div>
             `).join('');
         }
 
         function toggleSelection(category, id) {
             if (!isVotingOpen) return;
-
             const list = selections[category];
             const index = list.indexOf(id);
-
             if (index > -1) {
                 list.splice(index, 1);
             } else {
                 if (list.length >= 2) {
-                    alert(`You can only select 2 entries in the ${category.toUpperCase()} category. Uncheck one before choosing another.`);
+                    alert(`You can only select 2 entries in ${category.toUpperCase()}.`);
                     return;
                 }
                 list.push(id);
             }
-
             updateUI();
         }
 
@@ -196,35 +193,50 @@
                 entries[cat].forEach(item => {
                     const card = document.getElementById(`card-${item.id}`);
                     if (card) {
-                        if (selections[cat].includes(item.id)) {
-                            card.classList.add('selected');
-                        } else {
-                            card.classList.remove('selected');
-                        }
+                        if (selections[cat].includes(item.id)) card.classList.add('selected');
+                        else card.classList.remove('selected');
                     }
                 });
             });
-
             document.getElementById('openCount').innerText = selections.open.length;
             document.getElementById('challengeCount').innerText = selections.challenge.length;
         }
 
-        function handleVoteSubmit(e) {
+        async function handleVoteSubmit(e) {
             e.preventDefault();
             if (selections.open.length !== 2 || selections.challenge.length !== 2) {
-                alert('Please select exactly 2 entries from EACH category (4 total) before submitting.');
+                alert('Please select exactly 2 entries from EACH category (4 total).');
                 return;
             }
 
-            selections.open.forEach(id => voteTally.open[id]++);
-            selections.challenge.forEach(id => voteTally.challenge[id]++);
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Submitting...';
 
-            alert('Thank you! Your votes have been recorded.');
-            selections = { open: [], challenge: [] };
-            updateUI();
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        open: selections.open,
+                        challenge: selections.challenge
+                    })
+                });
+
+                alert('Thank you! Your votes have been recorded.');
+                selections = { open: [], challenge: [] };
+                updateUI();
+            } catch (error) {
+                console.error('Error submitting vote:', error);
+                alert('Error submitting votes. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Submit My Votes (4 Total)';
+            }
         }
 
-        function toggleVotingState() {
+        async function toggleVotingState() {
             isVotingOpen = !isVotingOpen;
             const statusBadge = document.getElementById('statusBadge');
             const closeBtn = document.getElementById('closeVotingBtn');
@@ -239,6 +251,13 @@
                 closedNotice.classList.remove('hidden');
                 resultsSection.classList.remove('hidden');
                 submitBtn.disabled = true;
+
+                // Refresh backend tallies when host closes voting
+                try {
+                    const response = await fetch(API_URL);
+                    const data = await response.json();
+                    if (data.tally) voteTally = data.tally;
+                } catch(err) { console.error('Error fetching final tally', err); }
 
                 collateResults();
             } else {
@@ -258,10 +277,9 @@
 
         function renderRankings(category, items, containerId) {
             const container = document.getElementById(containerId);
-            
             const sorted = items.map(item => ({
                 ...item,
-                votes: voteTally[category][item.id] || 0
+                votes: (voteTally[category] && voteTally[category][item.id]) ? voteTally[category][item.id] : 0
             })).sort((a, b) => b.votes - a.votes);
 
             let currentRank = 1;
@@ -272,11 +290,7 @@
                     currentRank = i + 1;
                 }
                 if (currentRank > 3) break;
-
-                rankedList.push({
-                    ...sorted[i],
-                    rank: currentRank
-                });
+                rankedList.push({ ...sorted[i], rank: currentRank });
             }
 
             const rankCounts = {};
@@ -322,8 +336,8 @@
             }
         }
 
+        // Initialize entries on page ready
         loadCompetitionEntries();
     </script>
 </body>
 </html>
-
