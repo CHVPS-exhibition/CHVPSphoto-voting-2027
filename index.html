@@ -27,7 +27,7 @@
                 <span class="text-2xl">📸</span>
                 <div>
                     <h1 class="text-lg font-bold leading-tight">Photo Club Competition</h1>
-                    <p class="text-xs text-slate-400">Audience Voting System</p>
+                    <p class="text-xs text-slate-400">Audience Voting & Appraiser Awards System</p>
                 </div>
             </div>
             <div id="statusBadge" class="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
@@ -53,7 +53,7 @@
 
         <!-- Closed Voting Notice -->
         <div id="closedNotice" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl text-center text-sm font-medium shadow-sm">
-            Voting is currently closed. Final results are displayed below.
+            Voting is currently closed. Enter appraiser awards below and launch projector view.
         </div>
 
         <!-- Form containing Category Cards -->
@@ -93,27 +93,59 @@
             </div>
         </form>
 
-        <!-- Collated Results Section -->
+        <!-- Collated Results & Appraiser Awards Section -->
         <section id="resultsSection" class="hidden space-y-6">
             <div class="bg-slate-900 text-white p-4 rounded-xl shadow-sm flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-bold">🏆 Official Competition Results 🏆</h2>
-                    <p class="text-xs text-slate-400">Aggregated real-time tallies from Google Sheet backend</p>
+                    <h2 class="text-lg font-bold">🏆 Competition Results & Awards 🏆</h2>
+                    <p class="text-xs text-slate-400">Audience tallies + Visiting appraiser trophies</p>
                 </div>
                 <button onclick="launchProjectionMode()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-4 py-2 rounded-lg transition shadow flex items-center gap-1.5">
                     📺 Launch Projector View
                 </button>
             </div>
 
-            <!-- Open Results -->
+            <!-- Host Appraiser Awards Input Panel -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="font-bold text-slate-900 text-sm border-b pb-2">🎯 Enter Visiting Appraiser Awards</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div>
+                        <label class="font-semibold text-slate-700 block mb-1">Open Category Commendations:</label>
+                        <div id="openCommendationsBoxes" class="space-y-1 max-h-40 overflow-y-auto p-2 border rounded bg-slate-50"></div>
+                    </div>
+                    <div>
+                        <label class="font-semibold text-slate-700 block mb-1">Challenge Category Commendations:</label>
+                        <div id="challengeCommendationsBoxes" class="space-y-1 max-h-40 overflow-y-auto p-2 border rounded bg-slate-50"></div>
+                    </div>
+                    <div>
+                        <label class="font-semibold text-slate-700 block mb-1">Denis Thorpe Trophy (Best Monochrome Overall):</label>
+                        <select id="denisThorpeSelect" class="w-full p-2 border rounded bg-slate-50 font-medium">
+                            <option value="">-- Select Monochrome Winner --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="font-semibold text-slate-700 block mb-1">Catherine Cup (Best Colour Overall):</label>
+                        <select id="catherineCupSelect" class="w-full p-2 border rounded bg-slate-50 font-medium">
+                            <option value="">-- Select Colour Winner --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button onclick="saveAppraiserAwards()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg transition">
+                        💾 Save Appraiser Selections
+                    </button>
+                </div>
+            </div>
+
+            <!-- Open Results Preview -->
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <h3 class="font-bold text-slate-900 border-b pb-2 mb-3 text-sm">Open Category Winners</h3>
+                <h3 class="font-bold text-slate-900 border-b pb-2 mb-3 text-sm">Open Category Audience Winners</h3>
                 <div id="openResultsList" class="space-y-2"></div>
             </div>
 
-            <!-- Challenge Results -->
+            <!-- Challenge Results Preview -->
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <h3 class="font-bold text-slate-900 border-b pb-2 mb-3 text-sm">Challenge Category Winners</h3>
+                <h3 class="font-bold text-slate-900 border-b pb-2 mb-3 text-sm">Challenge Category Audience Winners</h3>
                 <div id="challengeResultsList" class="space-y-2"></div>
             </div>
         </section>
@@ -122,32 +154,54 @@
 
     <!-- FULLSCREEN PROJECTOR DISPLAY OVERLAY -->
     <div id="projectorOverlay" class="fixed inset-0 bg-slate-950 text-white z-50 hidden overflow-y-auto p-6 md:p-12">
-        <div class="max-w-6xl mx-auto space-y-10">
+        <div class="max-w-6xl mx-auto space-y-12">
             <!-- Projector Header -->
             <div class="flex justify-between items-center border-b border-slate-800 pb-6">
                 <div>
-                    <h1 class="text-3xl md:text-5xl font-extrabold text-amber-400 tracking-tight">📸 Official Winners & Runners Up</h1>
-                    <p class="text-slate-400 text-sm md:text-base mt-1">Photo Club Live Audience Voting Results</p>
+                    <h1 class="text-3xl md:text-5xl font-extrabold text-amber-400 tracking-tight">🏆 Official Competition Results & Awards</h1>
+                    <p class="text-slate-400 text-sm md:text-base mt-1">Photo Club Live Presentation</p>
                 </div>
                 <button onclick="closeProjectionMode()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl text-sm font-semibold border border-slate-700">
                     ✕ Exit Projection View
                 </button>
             </div>
 
-            <!-- Projector Open Category -->
-            <div>
-                <h2 class="text-2xl md:text-3xl font-bold text-slate-200 mb-6 flex items-center gap-3">
-                    <span class="bg-blue-600 text-white text-sm px-3 py-1 rounded-md uppercase font-semibold">Category 1</span> Open Winners
-                </h2>
-                <div id="projOpenCards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            <!-- SECTION 1: AUDIENCE AWARDS -->
+            <div class="space-y-8">
+                <div class="border-b border-slate-800 pb-2">
+                    <h2 class="text-2xl font-bold text-amber-300">1. Audience Vote Winners & Runners Up</h2>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-slate-200 mb-4">Open Category</h3>
+                    <div id="projOpenAudience" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                </div>
+                <div class="pt-4">
+                    <h3 class="text-xl font-bold text-slate-200 mb-4">Challenge Category</h3>
+                    <div id="projChallengeAudience" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                </div>
             </div>
 
-            <!-- Projector Challenge Category -->
-            <div class="pt-6 border-t border-slate-800">
-                <h2 class="text-2xl md:text-3xl font-bold text-slate-200 mb-6 flex items-center gap-3">
-                    <span class="bg-purple-600 text-white text-sm px-3 py-1 rounded-md uppercase font-semibold">Category 2</span> Challenge Winners
-                </h2>
-                <div id="projChallengeCards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            <!-- SECTION 2: APPRAISER COMMENDATIONS -->
+            <div class="space-y-8 pt-6 border-t border-slate-800">
+                <div class="border-b border-slate-800 pb-2">
+                    <h2 class="text-2xl font-bold text-amber-300">2. Visiting Appraiser Commendations</h2>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-slate-200 mb-4">Open Category Commendations</h3>
+                    <div id="projOpenCommendations" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                </div>
+                <div class="pt-4">
+                    <h3 class="text-xl font-bold text-slate-200 mb-4">Challenge Category Commendations</h3>
+                    <div id="projChallengeCommendations" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: SPECIAL APPRAISER TROPHIES -->
+            <div class="space-y-6 pt-6 border-t border-slate-800">
+                <div class="border-b border-slate-800 pb-2">
+                    <h2 class="text-2xl font-bold text-amber-300">3. Overall Appraiser Trophies</h2>
+                </div>
+                <div id="projTrophies" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </div>
         </div>
     </div>
@@ -165,12 +219,20 @@
 
     <!-- Application JavaScript Logic -->
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxdFf1xs1PKNGZYMAVU4HPFdRbuLtBlOBwAgg9CGl-qQAs9Se4PNwH0KSkCJHfmAQ9SaQ/exec';
+        const API_URL = 'https://chvps-exhibition.github.io/CHVPSphoto-voting-2027/
+';
 
         let entries = { open: [], challenge: [] };
         let voteTally = { open: {}, challenge: {} };
         let selections = { open: [], challenge: [] };
         let isVotingOpen = true;
+
+        let appraiserAwards = {
+            openCommendations: [],
+            challengeCommendations: [],
+            denisThorpeId: '',
+            catherineCupId: ''
+        };
 
         async function loadCompetitionEntries() {
             try {
@@ -181,6 +243,7 @@
                 if (data.tally) voteTally = data.tally;
                 
                 renderGrids();
+                populateAppraiserInputs();
             } catch (error) {
                 console.error('Error loading entries:', error);
             }
@@ -363,20 +426,71 @@
             }).join('');
         }
 
+        // POPULATE HOST APPRAISER AWARD INPUTS
+        function populateAppraiserInputs() {
+            const allEntries = [...entries.open, ...entries.challenge];
+
+            // Commendations Checkboxes
+            document.getElementById('openCommendationsBoxes').innerHTML = entries.open.map(item => `
+                <label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-slate-100 rounded">
+                    <input type="checkbox" value="${item.id}" class="open-comm-cb rounded text-blue-600" ${appraiserAwards.openCommendations.includes(item.id) ? 'checked' : ''}>
+                    <span class="font-medium text-slate-700 truncate">${item.title}</span>
+                </label>
+            `).join('');
+
+            document.getElementById('challengeCommendationsBoxes').innerHTML = entries.challenge.map(item => `
+                <label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-slate-100 rounded">
+                    <input type="checkbox" value="${item.id}" class="chal-comm-cb rounded text-blue-600" ${appraiserAwards.challengeCommendations.includes(item.id) ? 'checked' : ''}>
+                    <span class="font-medium text-slate-700 truncate">${item.title}</span>
+                </label>
+            `).join('');
+
+            // Trophy Dropdowns
+            const trophyOptions = '<option value="">-- Select Entry --</option>' + allEntries.map(item => `<option value="${item.id}">${item.title} (${item.id.startsWith('O') ? 'Open' : 'Challenge'})</option>`).join('');
+            
+            const dtSelect = document.getElementById('denisThorpeSelect');
+            dtSelect.innerHTML = trophyOptions;
+            dtSelect.value = appraiserAwards.denisThorpeId;
+
+            const ccSelect = document.getElementById('catherineCupSelect');
+            ccSelect.innerHTML = trophyOptions;
+            ccSelect.value = appraiserAwards.catherineCupId;
+        }
+
+        function saveAppraiserAwards() {
+            appraiserAwards.openCommendations = Array.from(document.querySelectorAll('.open-comm-cb:checked')).map(cb => cb.value);
+            appraiserAwards.challengeCommendations = Array.from(document.querySelectorAll('.chal-comm-cb:checked')).map(cb => cb.value);
+            appraiserAwards.denisThorpeId = document.getElementById('denisThorpeSelect').value;
+            appraiserAwards.catherineCupId = document.getElementById('catherineCupSelect').value;
+            alert('Appraiser awards saved successfully!');
+        }
+
         // FULLSCREEN PROJECTOR DISPLAY LOGIC
         function launchProjectionMode() {
-            renderProjectorCards('open', entries.open, 'projOpenCards');
-            renderProjectorCards('challenge', entries.challenge, 'projChallengeCards');
+            // Section 1: Audience
+            renderProjectorCards('open', getTopRankedItems('open', entries.open), 'projOpenAudience', 'audience');
+            renderProjectorCards('challenge', getTopRankedItems('challenge', entries.challenge), 'projChallengeAudience', 'audience');
+
+            // Section 2: Commendations
+            renderCommendationCards(entries.open, appraiserAwards.openCommendations, 'projOpenCommendations');
+            renderCommendationCards(entries.challenge, appraiserAwards.challengeCommendations, 'projChallengeCommendations');
+
+            // Section 3: Trophies (Denis Thorpe & Catherine Cup)
+            renderTrophyCards();
+
             document.getElementById('projectorOverlay').classList.remove('hidden');
         }
 
         function closeProjectionMode() {
-            document.getElementById('projectorOverlay').classList.add('hidden');
+            document.getElementById('projectorOverlay'].classList.add('hidden');
         }
 
-        function renderProjectorCards(category, items, containerId) {
+        function renderProjectorCards(category, rankedList, containerId, mode) {
             const container = document.getElementById(containerId);
-            const rankedList = getTopRankedItems(category, items);
+            if (!rankedList || rankedList.length === 0) {
+                container.innerHTML = `<p class="text-slate-500 italic text-sm">No entries to display.</p>`;
+                return;
+            }
 
             const rankCounts = {};
             rankedList.forEach(r => rankCounts[r.rank] = (rankCounts[r.rank] || 0) + 1);
@@ -410,12 +524,96 @@
                             </div>
                         </div>
                         <div class="px-5 pb-5 flex justify-between items-center border-t border-slate-800/60 pt-4">
-                            <span class="text-xs uppercase text-slate-400 font-semibold tracking-wider">Total Score</span>
+                            <span class="text-xs uppercase text-slate-400 font-semibold tracking-wider">Audience Score</span>
                             <span class="text-lg font-extrabold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">${item.votes} Votes</span>
                         </div>
                     </div>
                 `;
             }).join('');
+        }
+
+        function renderCommendationCards(categoryEntries, commIds, containerId) {
+            const container = document.getElementById(containerId);
+            const commItems = categoryEntries.filter(item => commIds.includes(item.id));
+
+            if (commItems.length === 0) {
+                container.innerHTML = `<p class="text-slate-500 italic text-sm">No commendations awarded in this category.</p>`;
+                return;
+            }
+
+            container.innerHTML = commItems.map(item => `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="relative">
+                            <img src="${item.img}" alt="${item.title}" class="w-full h-56 object-cover">
+                            <div class="absolute top-3 left-3 px-3 py-1.5 rounded-lg text-xs tracking-wider uppercase bg-blue-600 text-white font-bold border border-blue-500">
+                                🎖️ COMMENDATION
+                            </div>
+                        </div>
+                        <div class="p-5">
+                            <h3 class="text-xl font-bold text-white tracking-tight">${item.title}</h3>
+                        </div>
+                    </div>
+                    <div class="px-5 pb-5 flex justify-between items-center border-t border-slate-800/60 pt-4">
+                        <span class="text-xs uppercase text-slate-400 font-semibold tracking-wider">Award</span>
+                        <span class="text-xs font-bold text-blue-400 bg-blue-400/10 px-3 py-1 rounded-full border border-blue-400/20">Photographic Excellence</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTrophyCards() {
+            const container = document.getElementById('projTrophies');
+            const allEntries = [...entries.open, ...entries.challenge];
+
+            const denisThorpeItem = allEntries.find(i => i.id === appraiserAwards.denisThorpeId);
+            const catherineCupItem = allEntries.find(i => i.id === appraiserAwards.catherineCupId);
+
+            let html = '';
+
+            if (denisThorpeItem) {
+                html += `
+                    <div class="bg-slate-900 border-2 border-amber-500/50 rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between">
+                        <div>
+                            <div class="relative">
+                                <img src="${denisThorpeItem.img}" alt="${denisThorpeItem.title}" class="w-full h-64 object-cover">
+                                <div class="absolute top-3 left-3 px-3.5 py-2 rounded-lg text-xs tracking-wider uppercase bg-amber-400 text-slate-950 font-black shadow-lg">
+                                    🏆 DENIS THORPE TROPHY
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <h3 class="text-2xl font-extrabold text-white tracking-tight">${denisThorpeItem.title}</h3>
+                                <p class="text-amber-400 text-sm font-medium mt-1">Best Monochrome Image Overall (${denisThorpeItem.id.startsWith('O') ? 'Open' : 'Challenge'} Category)</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center justify-center text-slate-500 italic">Denis Thorpe Trophy winner not yet selected.</div>`;
+            }
+
+            if (catherineCupItem) {
+                html += `
+                    <div class="bg-slate-900 border-2 border-amber-500/50 rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between">
+                        <div>
+                            <div class="relative">
+                                <img src="${catherineCupItem.img}" alt="${catherineCupItem.title}" class="w-full h-64 object-cover">
+                                <div class="absolute top-3 left-3 px-3.5 py-2 rounded-lg text-xs tracking-wider uppercase bg-amber-400 text-slate-950 font-black shadow-lg">
+                                    🏆 CATHERINE CUP
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <h3 class="text-2xl font-extrabold text-white tracking-tight">${catherineCupItem.title}</h3>
+                                <p class="text-amber-400 text-sm font-medium mt-1">Best Colour Image Overall (${catherineCupItem.id.startsWith('O') ? 'Open' : 'Challenge'} Category)</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center justify-center text-slate-500 italic">Catherine Cup winner not yet selected.</div>`;
+            }
+
+            container.innerHTML = html;
         }
 
         function toggleQrModal() {
