@@ -220,7 +220,7 @@
     <!-- Application JavaScript Logic -->
     <script>
         // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE:
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxdFf1xs1PKNGZYMAVU4HPFdRbuLtBlOBwAgg9CGl-qQAs9Se4PNwH0KSkCJHfmAQ9SaQ/exec';
+        const API_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 
         let entries = { open: [], challenge: [] };
         let voteTally = { open: {}, challenge: {} };
@@ -456,7 +456,7 @@
             ccSelect.value = appraiserAwards.catherineCupId;
         }
 
-        // SAVE AND EXPORT TO SPREADSHEET (Includes Photographer Names)
+        // SAVE AND EXPORT TO SPREADSHEET
         async function saveAppraiserAwards() {
             appraiserAwards.openCommendations = Array.from(document.querySelectorAll('.open-comm-cb:checked')).map(cb => cb.value);
             appraiserAwards.challengeCommendations = Array.from(document.querySelectorAll('.chal-comm-cb:checked')).map(cb => cb.value);
@@ -515,7 +515,7 @@
             }
         }
 
-        // FULLSCREEN PROJECTOR DISPLAY (REVEALS PHOTOGRAPHER NAMES)
+        // FULLSCREEN PROJECTOR DISPLAY ("Photographed by")
         function launchProjectionMode() {
             renderProjectorCards('open', getTopRankedItems('open', entries.open), 'projOpenAudience');
             renderProjectorCards('challenge', getTopRankedItems('challenge', entries.challenge), 'projChallengeAudience');
@@ -568,7 +568,7 @@
                             </div>
                             <div class="p-5">
                                 <h3 class="text-xl font-bold text-white tracking-tight">${item.title}</h3>
-                                <p class="text-amber-400 text-sm font-semibold mt-1">by ${item.photographer}</p>
+                                <p class="text-amber-400 text-sm font-semibold mt-1">Photographed by ${item.photographer}</p>
                             </div>
                         </div>
                         <div class="px-5 pb-5 flex justify-between items-center border-t border-slate-800/60 pt-4">
@@ -600,7 +600,7 @@
                         </div>
                         <div class="p-5">
                             <h3 class="text-xl font-bold text-white tracking-tight">${item.title}</h3>
-                            <p class="text-amber-400 text-sm font-semibold mt-1">by ${item.photographer}</p>
+                            <p class="text-amber-400 text-sm font-semibold mt-1">Photographed by ${item.photographer}</p>
                         </div>
                     </div>
                     <div class="px-5 pb-5 flex justify-between items-center border-t border-slate-800/60 pt-4">
@@ -632,7 +632,7 @@
                             </div>
                             <div class="p-6">
                                 <h3 class="text-2xl font-extrabold text-white tracking-tight">${denisThorpeItem.title}</h3>
-                                <p class="text-amber-400 text-base font-bold mt-1">by ${denisThorpeItem.photographer}</p>
+                                <p class="text-amber-400 text-base font-bold mt-1">Photographed by ${denisThorpeItem.photographer}</p>
                                 <p class="text-slate-400 text-xs font-medium mt-1">Best Monochrome Image Overall (${denisThorpeItem.id.startsWith('O') ? 'Open' : 'Challenge'} Category)</p>
                             </div>
                         </div>
@@ -654,7 +654,7 @@
                             </div>
                             <div class="p-6">
                                 <h3 class="text-2xl font-extrabold text-white tracking-tight">${catherineCupItem.title}</h3>
-                                <p class="text-amber-400 text-base font-bold mt-1">by ${catherineCupItem.photographer}</p>
+                                <p class="text-amber-400 text-base font-bold mt-1">Photographed by ${catherineCupItem.photographer}</p>
                                 <p class="text-slate-400 text-xs font-medium mt-1">Best Colour Image Overall (${catherineCupItem.id.startsWith('O') ? 'Open' : 'Challenge'} Category)</p>
                             </div>
                         </div>
