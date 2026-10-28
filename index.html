@@ -532,7 +532,7 @@
             document.getElementById('projectorOverlay').classList.add('hidden');
         }
 
-        function renderProjectorCards(category, rankedList, containerId) {
+function renderProjectorCards(category, rankedList, containerId) {
             const container = document.getElementById(containerId);
             if (!rankedList || rankedList.length === 0) {
                 container.innerHTML = '<p class="text-slate-500 italic text-sm">No entries to display.</p>';
@@ -560,9 +560,9 @@
                 return `
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between">
                         <div>
-                            <div class="relative">
-                                <img src="${item.img}" alt="${item.title}" class="w-full h-56 object-cover">
-                                <div class="absolute top-3 left-3 px-3 py-1.5 rounded-lg text-xs tracking-wider uppercase border ${badgeClass}">
+                            <div class="relative bg-slate-950 h-80 flex items-center justify-center overflow-hidden">
+                                <img src="${item.img}" alt="${item.title}" class="max-h-full max-w-full object-contain">
+                                <div class="absolute top-3 left-3 px-3 py-1.5 rounded-lg text-xs tracking-wider uppercase border ${badgeClass} z-10">
                                     ${titleLabel}
                                 </div>
                             </div>
@@ -592,9 +592,9 @@
             container.innerHTML = commItems.map(item => `
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between">
                     <div>
-                        <div class="relative">
-                            <img src="${item.img}" alt="${item.title}" class="w-full h-56 object-cover">
-                            <div class="absolute top-3 left-3 px-3 py-1.5 rounded-lg text-xs tracking-wider uppercase bg-blue-600 text-white font-bold border border-blue-500">
+                        <div class="relative bg-slate-950 h-80 flex items-center justify-center overflow-hidden">
+                            <img src="${item.img}" alt="${item.title}" class="max-h-full max-w-full object-contain">
+                            <div class="absolute top-3 left-3 px-3 py-1.5 rounded-lg text-xs tracking-wider uppercase bg-blue-600 text-white font-bold border border-blue-500 z-10">
                                 🎖️ COMMENDATION
                             </div>
                         </div>
@@ -624,9 +624,9 @@
                 html += `
                     <div class="bg-slate-900 border-2 border-amber-500/50 rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between">
                         <div>
-                            <div class="relative">
-                                <img src="${denisThorpeItem.img}" alt="${denisThorpeItem.title}" class="w-full h-64 object-cover">
-                                <div class="absolute top-3 left-3 px-3.5 py-2 rounded-lg text-xs tracking-wider uppercase bg-amber-400 text-slate-950 font-black shadow-lg">
+                            <div class="relative bg-slate-950 h-96 flex items-center justify-center overflow-hidden">
+                                <img src="${denisThorpeItem.img}" alt="${denisThorpeItem.title}" class="max-h-full max-w-full object-contain">
+                                <div class="absolute top-3 left-3 px-3.5 py-2 rounded-lg text-xs tracking-wider uppercase bg-amber-400 text-slate-950 font-black shadow-lg z-10">
                                     🏆 DENIS THORPE TROPHY
                                 </div>
                             </div>
@@ -641,6 +641,31 @@
             } else {
                 html += '<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center justify-center text-slate-500 italic">Denis Thorpe Trophy winner not yet selected.</div>';
             }
+
+            if (catherineCupItem) {
+                html += `
+                    <div class="bg-slate-900 border-2 border-amber-500/50 rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between">
+                        <div>
+                            <div class="relative bg-slate-950 h-96 flex items-center justify-center overflow-hidden">
+                                <img src="${catherineCupItem.img}" alt="${catherineCupItem.title}" class="max-h-full max-w-full object-contain">
+                                <div class="absolute top-3 left-3 px-3.5 py-2 rounded-lg text-xs tracking-wider uppercase bg-amber-400 text-slate-950 font-black shadow-lg z-10">
+                                    🏆 CATHERINE CUP
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <h3 class="text-2xl font-extrabold text-white tracking-tight">${catherineCupItem.title}</h3>
+                                <p class="text-amber-400 text-base font-bold mt-1">Photographed by ${catherineCupItem.photographer}</p>
+                                <p class="text-slate-400 text-xs font-medium mt-1">Best Colour Image Overall (${catherineCupItem.id.startsWith('O') ? 'Open' : 'Challenge'} Category)</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += '<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center justify-center text-slate-500 italic">Catherine Cup winner not yet selected.</div>';
+            }
+
+            container.innerHTML = html;
+        }
 
             if (catherineCupItem) {
                 html += `
