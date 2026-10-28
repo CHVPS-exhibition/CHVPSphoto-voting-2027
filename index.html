@@ -56,7 +56,7 @@
             Voting is currently closed. Enter appraiser awards below and launch projector view.
         </div>
 
-        <!-- Form containing Category Cards -->
+        <!-- Form containing Category Cards (Anonymous Voting) -->
         <form id="votingForm" onsubmit="handleVoteSubmit(event)">
 
             <!-- Category 1: Open -->
@@ -105,7 +105,7 @@
                 </button>
             </div>
 
-            <!-- Host Appraiser Awards Input Panel -->
+            <!-- Host Appraiser Awards Input Panel (Anonymous Titles Only) -->
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
                 <h3 class="font-bold text-slate-900 text-sm border-b pb-2">🎯 Enter Visiting Appraiser Awards</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
@@ -132,7 +132,7 @@
                 </div>
                 <div class="flex justify-end">
                     <button onclick="saveAppraiserAwards()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg transition">
-                        💾 Save Appraiser Selections
+                        💾 Save Appraiser Selections & Sync Sheet
                     </button>
                 </div>
             </div>
@@ -152,7 +152,7 @@
 
     </main>
 
-    <!-- FULLSCREEN PROJECTOR DISPLAY OVERLAY -->
+    <!-- FULLSCREEN PROJECTOR DISPLAY OVERLAY (REVEALS PHOTOGRAPHER NAMES) -->
     <div id="projectorOverlay" class="fixed inset-0 bg-slate-950 text-white z-50 hidden overflow-y-auto p-6 md:p-12">
         <div class="max-w-6xl mx-auto space-y-12">
             <!-- Projector Header -->
@@ -219,9 +219,7 @@
 
     <!-- Application JavaScript Logic -->
     <script>
-        // ----------------------------------------------------
         // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE:
-        // ----------------------------------------------------
         const API_URL = 'https://script.google.com/macros/s/AKfycbxdFf1xs1PKNGZYMAVU4HPFdRbuLtBlOBwAgg9CGl-qQAs9Se4PNwH0KSkCJHfmAQ9SaQ/exec';
 
         let entries = { open: [], challenge: [] };
@@ -256,6 +254,7 @@
             renderCategoryGrid('challenge', entries.challenge, 'challengeGrid');
         }
 
+        // VOTING CARDS (Show Title ONLY - Anonymous)
         function renderCategoryGrid(category, items, containerId) {
             const container = document.getElementById(containerId);
             if (!items || items.length === 0) {
@@ -428,11 +427,10 @@
             }).join('');
         }
 
-        // POPULATE HOST APPRAISER AWARD INPUTS
+        // APPRAISER CONTROLS (Shows Title ONLY - Anonymous)
         function populateAppraiserInputs() {
             const allEntries = [...entries.open, ...entries.challenge];
 
-            // Commendations Checkboxes
             document.getElementById('openCommendationsBoxes').innerHTML = entries.open.map(item => `
                 <label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-slate-100 rounded">
                     <input type="checkbox" value="${item.id}" class="open-comm-cb rounded text-blue-600" ${appraiserAwards.openCommendations.includes(item.id) ? 'checked' : ''}>
@@ -447,7 +445,6 @@
                 </label>
             `).join('');
 
-            // Trophy Dropdowns
             const trophyOptions = '<option value="">-- Select Entry --</option>' + allEntries.map(item => `<option value="${item.id}">${item.title} (${item.id.startsWith('O') ? 'Open' : 'Challenge'})</option>`).join('');
             
             const dtSelect = document.getElementById('denisThorpeSelect');
@@ -459,16 +456,15 @@
             ccSelect.value = appraiserAwards.catherineCupId;
         }
 
+        // SAVE AND EXPORT TO SPREADSHEET (Includes Photographer Names)
         async function saveAppraiserAwards() {
             appraiserAwards.openCommendations = Array.from(document.querySelectorAll('.open-comm-cb:checked')).map(cb => cb.value);
             appraiserAwards.challengeCommendations = Array.from(document.querySelectorAll('.chal-comm-cb:checked')).map(cb => cb.value);
             appraiserAwards.denisThorpeId = document.getElementById('denisThorpeSelect').value;
             appraiserAwards.catherineCupId = document.getElementById('catherineCupSelect').value;
 
-            // Prepare export payload
             const allEntries = [...entries.open, ...entries.challenge];
             
-            // Build Audience Results List
             const audienceResults = [];
             ['open', 'challenge'].forEach(cat => {
                 const topItems = getTopRankedItems(cat, entries[cat]);
@@ -477,18 +473,18 @@
                         category: cat.toUpperCase(),
                         rankLabel: 'Rank ' + item.rank,
                         title: item.title,
+                        photographer: item.photographer,
                         votes: item.votes
                     });
                 });
             });
 
-            // Build Commendations List
             const commendations = [];
             entries.open.filter(i => appraiserAwards.openCommendations.includes(i.id)).forEach(i => {
-                commendations.push({ category: 'OPEN', title: i.title });
+                commendations.push({ category: 'OPEN', title: i.title, photographer: i.photographer });
             });
             entries.challenge.filter(i => appraiserAwards.challengeCommendations.includes(i.id)).forEach(i => {
-                commendations.push({ category: 'CHALLENGE', title: i.title });
+                commendations.push({ category: 'CHALLENGE', title: i.title, photographer: i.photographer });
             });
 
             const denisThorpeItem = allEntries.find(i => i.id === appraiserAwards.denisThorpeId);
@@ -498,8 +494,10 @@
                 action: 'saveSummary',
                 audienceResults: audienceResults,
                 commendations: commendations,
-                denisThorpe: denisThorpeItem ? denisThorpeItem.title : '',
-                catherineCup: catherineCupItem ? catherineCupItem.title : ''
+                denisThorpeTitle: denisThorpeItem ? denisThorpeItem.title : '',
+                denisThorpePhotographer: denisThorpeItem ? denisThorpeItem.photographer : '',
+                catherineCupTitle: catherineCupItem ? catherineCupItem.title : '',
+                catherineCupPhotographer: catherineCupItem ? catherineCupItem.photographer : ''
             };
 
             try {
@@ -512,15 +510,15 @@
 
                 alert('Appraiser awards saved & exported to Google Sheet "Exhibition Results" tab!');
             } catch (err) {
-                console.error('Error exporting summary to spreadsheet:', err);
+                console.error('Error exporting summary:', err);
                 alert('Saved locally, but error syncing to Google Sheet.');
             }
         }
 
-        // FULLSCREEN PROJECTOR DISPLAY LOGIC
+        // FULLSCREEN PROJECTOR DISPLAY (REVEALS PHOTOGRAPHER NAMES)
         function launchProjectionMode() {
-            renderProjectorCards('open', getTopRankedItems('open', entries.open), 'projOpenAudience', 'audience');
-            renderProjectorCards('challenge', getTopRankedItems('challenge', entries.challenge), 'projChallengeAudience', 'audience');
+            renderProjectorCards('open', getTopRankedItems('open', entries.open), 'projOpenAudience');
+            renderProjectorCards('challenge', getTopRankedItems('challenge', entries.challenge), 'projChallengeAudience');
 
             renderCommendationCards(entries.open, appraiserAwards.openCommendations, 'projOpenCommendations');
             renderCommendationCards(entries.challenge, appraiserAwards.challengeCommendations, 'projChallengeCommendations');
@@ -534,7 +532,7 @@
             document.getElementById('projectorOverlay').classList.add('hidden');
         }
 
-        function renderProjectorCards(category, rankedList, containerId, mode) {
+        function renderProjectorCards(category, rankedList, containerId) {
             const container = document.getElementById(containerId);
             if (!rankedList || rankedList.length === 0) {
                 container.innerHTML = '<p class="text-slate-500 italic text-sm">No entries to display.</p>';
@@ -570,6 +568,7 @@
                             </div>
                             <div class="p-5">
                                 <h3 class="text-xl font-bold text-white tracking-tight">${item.title}</h3>
+                                <p class="text-amber-400 text-sm font-semibold mt-1">by ${item.photographer}</p>
                             </div>
                         </div>
                         <div class="px-5 pb-5 flex justify-between items-center border-t border-slate-800/60 pt-4">
@@ -601,6 +600,7 @@
                         </div>
                         <div class="p-5">
                             <h3 class="text-xl font-bold text-white tracking-tight">${item.title}</h3>
+                            <p class="text-amber-400 text-sm font-semibold mt-1">by ${item.photographer}</p>
                         </div>
                     </div>
                     <div class="px-5 pb-5 flex justify-between items-center border-t border-slate-800/60 pt-4">
@@ -632,7 +632,8 @@
                             </div>
                             <div class="p-6">
                                 <h3 class="text-2xl font-extrabold text-white tracking-tight">${denisThorpeItem.title}</h3>
-                                <p class="text-amber-400 text-sm font-medium mt-1">Best Monochrome Image Overall (${denisThorpeItem.id.startsWith('O') ? 'Open' : 'Challenge'} Category)</p>
+                                <p class="text-amber-400 text-base font-bold mt-1">by ${denisThorpeItem.photographer}</p>
+                                <p class="text-slate-400 text-xs font-medium mt-1">Best Monochrome Image Overall (${denisThorpeItem.id.startsWith('O') ? 'Open' : 'Challenge'} Category)</p>
                             </div>
                         </div>
                     </div>
@@ -653,7 +654,8 @@
                             </div>
                             <div class="p-6">
                                 <h3 class="text-2xl font-extrabold text-white tracking-tight">${catherineCupItem.title}</h3>
-                                <p class="text-amber-400 text-sm font-medium mt-1">Best Colour Image Overall (${catherineCupItem.id.startsWith('O') ? 'Open' : 'Challenge'} Category)</p>
+                                <p class="text-amber-400 text-base font-bold mt-1">by ${catherineCupItem.photographer}</p>
+                                <p class="text-slate-400 text-xs font-medium mt-1">Best Colour Image Overall (${catherineCupItem.id.startsWith('O') ? 'Open' : 'Challenge'} Category)</p>
                             </div>
                         </div>
                     </div>
