@@ -192,4 +192,494 @@
                 </div>
                 <div class="pt-4">
                     <h3 class="text-xl font-bold text-slate-200 mb-4">Challenge Category Commendations</h3>
-                    <div id="projChallengeCommendations" class="grid grid-cols-1
+                    <div id="projChallengeCommendations" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: SPECIAL APPRAISER TROPHIES -->
+            <div class="space-y-6 pt-6 border-t border-slate-800">
+                <div class="border-b border-slate-800 pb-2">
+                    <h2 class="text-2xl font-bold text-amber-300">3. Overall Appraiser Trophies</h2>
+                </div>
+                <div id="projTrophies" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qrModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl relative">
+            <button onclick="toggleQrModal()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            <h3 class="font-bold text-slate-900 text-lg mb-1">Scan to Vote</h3>
+            <p class="text-xs text-slate-500 mb-4">Point phone camera at code to open voting app</p>
+            <div id="qrcode" class="flex justify-center p-3 bg-slate-50 rounded-xl border mb-4"></div>
+            <button onclick="toggleQrModal()" class="w-full bg-slate-800 text-white font-semibold text-xs py-2.5 rounded-lg">Close</button>
+        </div>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxdFf1xs1PKNGZYMAVU4HPFdRbuLtBlOBwAgg9CGl-qQAs9Se4PNwH0KSkCJHfmAQ9SaQ/exec';
+
+        let entries = { open: [], challenge: [] };
+        let voteTally = { open: {}, challenge: {} };
+        let selections = { open: [], challenge: [] };
+        let isVotingOpen = true;
+
+        let appraiserAwards = {
+            openCommendations: [],
+            challengeCommendations: [],
+            denisThorpeId: '',
+            catherineCupId: ''
+        };
+
+        async function loadCompetitionEntries() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                entries.open = data.open || [];
+                entries.challenge = data.challenge || [];
+                if (data.tally) voteTally = data.tally;
+                
+                renderGrids();
+                populateAppraiserInputs();
+            } catch (error) {
+                console.error('Error loading entries:', error);
+            }
+        }
+
+        function renderGrids() {
+            renderCategoryGrid('open', entries.open, 'openGrid');
+            renderCategoryGrid('challenge', entries.challenge, 'challengeGrid');
+        }
+
+        // VOTING CARDS (Show Title ONLY - Anonymous)
+        function renderCategoryGrid(category, items, containerId) {
+            const container = document.getElementById(containerId);
+            if (!items || items.length === 0) {
+                container.innerHTML = '<p class="text-xs text-amber-600 italic col-span-full">No images found in this folder.</p>';
+                return;
+            }
+            container.innerHTML = items.map(item => `
+                <div id="card-${item.id}" onclick="toggleSelection('${category}', '${item.id}')" 
+                     class="photo-card relative bg-white border-2 border-slate-200 rounded-lg overflow-hidden cursor-pointer hover:border-slate-400 transition shadow-sm">
+                    <img src="${item.img}" alt="${item.title}" class="w-full h-28 object-cover">
+                    <div class="p-2 text-xs font-semibold text-slate-700 truncate">${item.title}</div>
+                    <div class="check-badge absolute top-2 right-2 bg-blue-600 text-white rounded-full w-6 h-6 hidden items-center justify-center text-xs font-bold shadow">✓</div>
+                </div>
+            `).join('');
+        }
+
+        function toggleSelection(category, id) {
+            if (!isVotingOpen) return;
+            const list = selections[category];
+            const index = list.indexOf(id);
+            if (index > -1) {
+                list.splice(index, 1);
+            } else {
+                if (list.length >= 2) {
+                    alert('You can only select 2 entries in ' + category.toUpperCase() + '.');
+                    return;
+                }
+                list.push(id);
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            ['open', 'challenge'].forEach(cat => {
+                entries[cat].forEach(item => {
+                    const card = document.getElementById('card-' + item.id);
+                    if (card) {
+                        if (selections[cat].includes(item.id)) card.classList.add('selected');
+                        else card.classList.remove('selected');
+                    }
+                });
+            });
+            document.getElementById('openCount').innerText = selections.open.length;
+            document.getElementById('challengeCount').innerText = selections.challenge.length;
+        }
+
+        async function handleVoteSubmit(e) {
+            e.preventDefault();
+            if (selections.open.length !== 2 || selections.challenge.length !== 2) {
+                alert('Please select exactly 2 entries from EACH category (4 total).');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Submitting...';
+
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        open: selections.open,
+                        challenge: selections.challenge
+                    })
+                });
+
+                alert('Thank you! Your votes have been recorded.');
+                selections = { open: [], challenge: [] };
+                updateUI();
+            } catch (error) {
+                console.error('Error submitting vote:', error);
+                alert('Error submitting votes. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Submit My Votes (4 Total)';
+            }
+        }
+
+        async function toggleVotingState() {
+            isVotingOpen = !isVotingOpen;
+            const statusBadge = document.getElementById('statusBadge');
+            const closeBtn = document.getElementById('closeVotingBtn');
+            const closedNotice = document.getElementById('closedNotice');
+            const resultsSection = document.getElementById('resultsSection');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (!isVotingOpen) {
+                statusBadge.innerText = 'Voting Closed';
+                statusBadge.className = 'bg-slate-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider';
+                closeBtn.innerText = '🔓 Re-Open Voting';
+                closedNotice.classList.remove('hidden');
+                resultsSection.classList.remove('hidden');
+                submitBtn.disabled = true;
+
+                try {
+                    const response = await fetch(API_URL);
+                    const data = await response.json();
+                    if (data.tally) voteTally = data.tally;
+                } catch(err) { console.error('Error fetching final tally', err); }
+
+                collateResults();
+            } else {
+                statusBadge.innerText = 'Voting Open';
+                statusBadge.className = 'bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider';
+                closeBtn.innerText = '🔒 Close Voting & Collate Results';
+                closedNotice.classList.add('hidden');
+                resultsSection.classList.add('hidden');
+                submitBtn.disabled = false;
+            }
+        }
+
+        function collateResults() {
+            renderRankings('open', entries.open, 'openResultsList');
+            renderRankings('challenge', entries.challenge, 'challengeResultsList');
+        }
+
+        function getTopRankedItems(category, items) {
+            const sorted = items.map(item => ({
+                ...item,
+                votes: (voteTally[category] && voteTally[category][item.id]) ? voteTally[category][item.id] : 0
+            })).sort((a, b) => b.votes - a.votes);
+
+            let currentRank = 1;
+            const rankedList = [];
+
+            for (let i = 0; i < sorted.length; i++) {
+                if (i > 0 && sorted[i].votes < sorted[i - 1].votes) {
+                    currentRank = i + 1;
+                }
+                if (currentRank > 3) break;
+                rankedList.push({ ...sorted[i], rank: currentRank });
+            }
+
+            return rankedList;
+        }
+
+        function renderRankings(category, items, containerId) {
+            const container = document.getElementById(containerId);
+            const rankedList = getTopRankedItems(category, items);
+
+            const rankCounts = {};
+            rankedList.forEach(r => rankCounts[r.rank] = (rankCounts[r.rank] || 0) + 1);
+
+            container.innerHTML = rankedList.map(item => {
+                let badgeColor = 'bg-slate-100 text-slate-800';
+                let label = 'Rank ' + item.rank;
+
+                if (item.rank === 1) {
+                    badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+                    label = rankCounts[1] > 1 ? '🥇 Joint Winner' : '🥇 Winner';
+                } else if (item.rank === 2) {
+                    badgeColor = 'bg-slate-200 text-slate-800 border-slate-300';
+                    label = rankCounts[2] > 1 ? '🥈 Joint Runner Up' : '🥈 Runner Up';
+                } else if (item.rank === 3) {
+                    badgeColor = 'bg-amber-700/10 text-amber-900 border-amber-700/30';
+                    label = rankCounts[3] > 1 ? '🥉 Joint 3rd Place' : '🥉 3rd Place';
+                }
+
+                return `
+                    <div class="flex items-center justify-between p-3 rounded-lg border ${badgeColor}">
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-sm px-2 py-1 bg-white/80 rounded border">${label}</span>
+                            <span class="font-medium text-sm">${item.title}</span>
+                        </div>
+                        <span class="text-xs font-bold bg-white/90 px-2.5 py-1 rounded-full shadow-sm">${item.votes} votes</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // APPRAISER CONTROLS (Shows Title ONLY - Anonymous)
+        function populateAppraiserInputs() {
+            const allEntries = [...entries.open, ...entries.challenge];
+
+            document.getElementById('openCommendationsBoxes').innerHTML = entries.open.map(item => `
+                <label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-slate-100 rounded">
+                    <input type="checkbox" value="${item.id}" class="open-comm-cb rounded text-blue-600" ${appraiserAwards.openCommendations.includes(item.id) ? 'checked' : ''}>
+                    <span class="font-medium text-slate-700 truncate">${item.title}</span>
+                </label>
+            `).join('');
+
+            document.getElementById('challengeCommendationsBoxes').innerHTML = entries.challenge.map(item => `
+                <label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-slate-100 rounded">
+                    <input type="checkbox" value="${item.id}" class="chal-comm-cb rounded text-blue-600" ${appraiserAwards.challengeCommendations.includes(item.id) ? 'checked' : ''}>
+                    <span class="font-medium text-slate-700 truncate">${item.title}</span>
+                </label>
+            `).join('');
+
+            const trophyOptions = '<option value="">-- Select Entry --</option>' + allEntries.map(item => `<option value="${item.id}">${item.title} (${item.id.startsWith('O') ? 'Open' : 'Challenge'})</option>`).join('');
+            
+            const dtSelect = document.getElementById('denisThorpeSelect');
+            dtSelect.innerHTML = trophyOptions;
+            dtSelect.value = appraiserAwards.denisThorpeId;
+
+            const ccSelect = document.getElementById('catherineCupSelect');
+            ccSelect.innerHTML = trophyOptions;
+            ccSelect.value = appraiserAwards.catherineCupId;
+        }
+
+        // SAVE AND EXPORT TO SPREADSHEET
+        async function saveAppraiserAwards() {
+            appraiserAwards.openCommendations = Array.from(document.querySelectorAll('.open-comm-cb:checked')).map(cb => cb.value);
+            appraiserAwards.challengeCommendations = Array.from(document.querySelectorAll('.chal-comm-cb:checked')).map(cb => cb.value);
+            appraiserAwards.denisThorpeId = document.getElementById('denisThorpeSelect').value;
+            appraiserAwards.catherineCupId = document.getElementById('catherineCupSelect').value;
+
+            const allEntries = [...entries.open, ...entries.challenge];
+            
+            const audienceResults = [];
+            ['open', 'challenge'].forEach(cat => {
+                const topItems = getTopRankedItems(cat, entries[cat]);
+                topItems.forEach(item => {
+                    audienceResults.push({
+                        category: cat.toUpperCase(),
+                        rankLabel: 'Rank ' + item.rank,
+                        title: item.title,
+                        photographer: item.photographer,
+                        votes: item.votes
+                    });
+                });
+            });
+
+            const commendations = [];
+            entries.open.filter(i => appraiserAwards.openCommendations.includes(i.id)).forEach(i => {
+                commendations.push({ category: 'OPEN', title: i.title, photographer: i.photographer });
+            });
+            entries.challenge.filter(i => appraiserAwards.challengeCommendations.includes(i.id)).forEach(i => {
+                commendations.push({ category: 'CHALLENGE', title: i.title, photographer: i.photographer });
+            });
+
+            const denisThorpeItem = allEntries.find(i => i.id === appraiserAwards.denisThorpeId);
+            const catherineCupItem = allEntries.find(i => i.id === appraiserAwards.catherineCupId);
+
+            const exportData = {
+                action: 'saveSummary',
+                audienceResults: audienceResults,
+                commendations: commendations,
+                denisThorpeTitle: denisThorpeItem ? denisThorpeItem.title : '',
+                denisThorpePhotographer: denisThorpeItem ? denisThorpeItem.photographer : '',
+                catherineCupTitle: catherineCupItem ? catherineCupItem.title : '',
+                catherineCupPhotographer: catherineCupItem ? catherineCupItem.photographer : ''
+            };
+
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(exportData)
+                });
+
+                alert('Appraiser awards saved & exported to Google Sheet "Exhibition Results" tab!');
+            } catch (err) {
+                console.error('Error exporting summary:', err);
+                alert('Saved locally, but error syncing to Google Sheet.');
+            }
+        }
+
+        // FULLSCREEN PROJECTOR DISPLAY ("Photographed by" with aspect-ratio support)
+        function launchProjectionMode() {
+            renderProjectorCards('open', getTopRankedItems('open', entries.open), 'projOpenAudience');
+            renderProjectorCards('challenge', getTopRankedItems('challenge', entries.challenge), 'projChallengeAudience');
+
+            renderCommendationCards(entries.open, appraiserAwards.openCommendations, 'projOpenCommendations');
+            renderCommendationCards(entries.challenge, appraiserAwards.challengeCommendations, 'projChallengeCommendations');
+
+            renderTrophyCards();
+
+            document.getElementById('projectorOverlay').classList.remove('hidden');
+        }
+
+        function closeProjectionMode() {
+            document.getElementById('projectorOverlay').classList.add('hidden');
+        }
+
+        function renderProjectorCards(category, rankedList, containerId) {
+            const container = document.getElementById(containerId);
+            if (!rankedList || rankedList.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 italic text-sm">No entries to display.</p>';
+                return;
+            }
+
+            const rankCounts = {};
+            rankedList.forEach(r => rankCounts[r.rank] = (rankCounts[r.rank] || 0) + 1);
+
+            container.innerHTML = rankedList.map(item => {
+                let badgeClass = 'bg-slate-800 text-slate-200 border-slate-700';
+                let titleLabel = 'Rank ' + item.rank;
+
+                if (item.rank === 1) {
+                    badgeClass = 'bg-amber-400 text-slate-950 font-black border-amber-300 shadow-lg shadow-amber-500/20';
+                    titleLabel = rankCounts[1] > 1 ? '🥇 JOINT WINNER' : '🥇 WINNER';
+                } else if (item.rank === 2) {
+                    badgeClass = 'bg-slate-300 text-slate-950 font-bold border-slate-200';
+                    titleLabel = rankCounts[2] > 1 ? '🥈 JOINT RUNNER UP' : '🥈 RUNNER UP';
+                } else if (item.rank === 3) {
+                    badgeClass = 'bg-amber-700 text-white font-bold border-amber-600';
+                    titleLabel = rankCounts[3] > 1 ? '🥉 JOINT 3RD PLACE' : '🥉 3RD PLACE';
+                }
+
+                return `
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between">
+                        <div>
+                            <div class="relative bg-slate-950 h-80 flex items-center justify-center overflow-hidden">
+                                <img src="${item.img}" alt="${item.title}" class="max-h-full max-w-full object-contain">
+                                <div class="absolute top-3 left-3 px-3 py-1.5 rounded-lg text-xs tracking-wider uppercase border ${badgeClass} z-10">
+                                    ${titleLabel}
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <h3 class="text-xl font-bold text-white tracking-tight">${item.title}</h3>
+                                <p class="text-amber-400 text-sm font-semibold mt-1">Photographed by ${item.photographer}</p>
+                            </div>
+                        </div>
+                        <div class="px-5 pb-5 flex justify-between items-center border-t border-slate-800/60 pt-4">
+                            <span class="text-xs uppercase text-slate-400 font-semibold tracking-wider">Audience Score</span>
+                            <span class="text-lg font-extrabold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">${item.votes} Votes</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderCommendationCards(categoryEntries, commIds, containerId) {
+            const container = document.getElementById(containerId);
+            const commItems = categoryEntries.filter(item => commIds.includes(item.id));
+
+            if (commItems.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 italic text-sm">No commendations awarded in this category.</p>';
+                return;
+            }
+
+            container.innerHTML = commItems.map(item => `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="relative bg-slate-950 h-80 flex items-center justify-center overflow-hidden">
+                            <img src="${item.img}" alt="${item.title}" class="max-h-full max-w-full object-contain">
+                            <div class="absolute top-3 left-3 px-3 py-1.5 rounded-lg text-xs tracking-wider uppercase bg-blue-600 text-white font-bold border border-blue-500 z-10">
+                                🎖️ COMMENDATION
+                            </div>
+                        </div>
+                        <div class="p-5">
+                            <h3 class="text-xl font-bold text-white tracking-tight">${item.title}</h3>
+                            <p class="text-amber-400 text-sm font-semibold mt-1">Photographed by ${item.photographer}</p>
+                        </div>
+                    </div>
+                    <div class="px-5 pb-5 flex justify-between items-center border-t border-slate-800/60 pt-4">
+                        <span class="text-xs uppercase text-slate-400 font-semibold tracking-wider">Award</span>
+                        <span class="text-xs font-bold text-blue-400 bg-blue-400/10 px-3 py-1 rounded-full border border-blue-400/20">Photographic Excellence</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTrophyCards() {
+            const container = document.getElementById('projTrophies');
+            const allEntries = [...entries.open, ...entries.challenge];
+
+            const denisThorpeItem = allEntries.find(i => i.id === appraiserAwards.denisThorpeId);
+            const catherineCupItem = allEntries.find(i => i.id === appraiserAwards.catherineCupId);
+
+            let html = '';
+
+            if (denisThorpeItem) {
+                html += `
+                    <div class="bg-slate-900 border-2 border-amber-500/50 rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between">
+                        <div>
+                            <div class="relative bg-slate-950 h-96 flex items-center justify-center overflow-hidden">
+                                <img src="${denisThorpeItem.img}" alt="${denisThorpeItem.title}" class="max-h-full max-w-full object-contain">
+                                <div class="absolute top-3 left-3 px-3.5 py-2 rounded-lg text-xs tracking-wider uppercase bg-amber-400 text-slate-950 font-black shadow-lg z-10">
+                                    🏆 DENIS THORPE TROPHY
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <h3 class="text-2xl font-extrabold text-white tracking-tight">${denisThorpeItem.title}</h3>
+                                <p class="text-amber-400 text-base font-bold mt-1">Photographed by ${denisThorpeItem.photographer}</p>
+                                <p class="text-slate-400 text-xs font-medium mt-1">Best Monochrome Image Overall (${denisThorpeItem.id.startsWith('O') ? 'Open' : 'Challenge'} Category)</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += '<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center justify-center text-slate-500 italic">Denis Thorpe Trophy winner not yet selected.</div>';
+            }
+
+            if (catherineCupItem) {
+                html += `
+                    <div class="bg-slate-900 border-2 border-amber-500/50 rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between">
+                        <div>
+                            <div class="relative bg-slate-950 h-96 flex items-center justify-center overflow-hidden">
+                                <img src="${catherineCupItem.img}" alt="${catherineCupItem.title}" class="max-h-full max-w-full object-contain">
+                                <div class="absolute top-3 left-3 px-3.5 py-2 rounded-lg text-xs tracking-wider uppercase bg-amber-400 text-slate-950 font-black shadow-lg z-10">
+                                    🏆 CATHERINE CUP
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <h3 class="text-2xl font-extrabold text-white tracking-tight">${catherineCupItem.title}</h3>
+                                <p class="text-amber-400 text-base font-bold mt-1">Photographed by ${catherineCupItem.photographer}</p>
+                                <p class="text-slate-400 text-xs font-medium mt-1">Best Colour Image Overall (${catherineCupItem.id.startsWith('O') ? 'Open' : 'Challenge'} Category)</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += '<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center justify-center text-slate-500 italic">Catherine Cup winner not yet selected.</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleQrModal() {
+            const modal = document.getElementById('qrModal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                document.getElementById('qrcode').innerHTML = '';
+                new QRCode(document.getElementById('qrcode'), {
+                    text: window.location.href,
+                    width: 200,
+                    height: 200
+                });
+            }
+        }
+
+        loadCompetitionEntries();
+    </script>
+</body>
+</html>
