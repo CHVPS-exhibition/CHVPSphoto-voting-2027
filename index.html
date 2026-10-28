@@ -459,12 +459,62 @@
             ccSelect.value = appraiserAwards.catherineCupId;
         }
 
-        function saveAppraiserAwards() {
+        async function saveAppraiserAwards() {
             appraiserAwards.openCommendations = Array.from(document.querySelectorAll('.open-comm-cb:checked')).map(cb => cb.value);
             appraiserAwards.challengeCommendations = Array.from(document.querySelectorAll('.chal-comm-cb:checked')).map(cb => cb.value);
             appraiserAwards.denisThorpeId = document.getElementById('denisThorpeSelect').value;
             appraiserAwards.catherineCupId = document.getElementById('catherineCupSelect').value;
-            alert('Appraiser awards saved successfully!');
+
+            // Prepare export payload
+            const allEntries = [...entries.open, ...entries.challenge];
+            
+            // Build Audience Results List
+            const audienceResults = [];
+            ['open', 'challenge'].forEach(cat => {
+                const topItems = getTopRankedItems(cat, entries[cat]);
+                topItems.forEach(item => {
+                    audienceResults.push({
+                        category: cat.toUpperCase(),
+                        rankLabel: 'Rank ' + item.rank,
+                        title: item.title,
+                        votes: item.votes
+                    });
+                });
+            });
+
+            // Build Commendations List
+            const commendations = [];
+            entries.open.filter(i => appraiserAwards.openCommendations.includes(i.id)).forEach(i => {
+                commendations.push({ category: 'OPEN', title: i.title });
+            });
+            entries.challenge.filter(i => appraiserAwards.challengeCommendations.includes(i.id)).forEach(i => {
+                commendations.push({ category: 'CHALLENGE', title: i.title });
+            });
+
+            const denisThorpeItem = allEntries.find(i => i.id === appraiserAwards.denisThorpeId);
+            const catherineCupItem = allEntries.find(i => i.id === appraiserAwards.catherineCupId);
+
+            const exportData = {
+                action: 'saveSummary',
+                audienceResults: audienceResults,
+                commendations: commendations,
+                denisThorpe: denisThorpeItem ? denisThorpeItem.title : '',
+                catherineCup: catherineCupItem ? catherineCupItem.title : ''
+            };
+
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(exportData)
+                });
+
+                alert('Appraiser awards saved & exported to Google Sheet "Exhibition Results" tab!');
+            } catch (err) {
+                console.error('Error exporting summary to spreadsheet:', err);
+                alert('Saved locally, but error syncing to Google Sheet.');
+            }
         }
 
         // FULLSCREEN PROJECTOR DISPLAY LOGIC
